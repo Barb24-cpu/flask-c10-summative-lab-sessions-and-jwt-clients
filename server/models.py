@@ -26,7 +26,7 @@ class User(db.Model):
         return bcrypt.check_password_hash(
             self._password_hash, password.encode("utf-8"))
 
-             @validates("username")
+    @validates("username")
     def validate_username(self, key, value):
         if not value or not value.strip():
             raise ValueError("Username is required.")
