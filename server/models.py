@@ -25,3 +25,41 @@ class User(db.Model):
     def authenticate(self, password):
         return bcrypt.check_password_hash(
             self._password_hash, password.encode("utf-8"))
+
+             @validates("username")
+    def validate_username(self, key, value):
+        if not value or not value.strip():
+            raise ValueError("Username is required.")
+        if User.query.filter(User.username == value, User.id != self.id).first():
+            raise ValueError("Username already taken.")
+        return value
+
+    def to_dict(self):
+        return {"id": self.id, "username": self.username}
+
+
+class Note(db.Model):
+    __tablename__ = "notes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    user = db.relationship("User", back_populates="notes")
+
+    @validates("title", "content")
+    def validate_not_empty(self, key, value):
+        if not value or not value.strip():
+            raise ValueError(f"{key.capitalize()} is required.")
+        return value
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "user_id": self.user_id,
+        }
