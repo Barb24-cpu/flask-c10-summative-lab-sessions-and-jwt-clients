@@ -21,7 +21,8 @@ class Signup(Resource):
         username = data.get("username")
         password = data.get("password")
         if not username or not password:
-            return {"error": "Username and password are required."}, 422
+            return {"error": "Username and password are required.",
+                    "errors": ["Username and password are required."]}, 422
         try:
             user = User(username=username)
             user.password_hash = password
@@ -29,9 +30,10 @@ class Signup(Resource):
             db.session.commit()
         except ValueError as e:
             db.session.rollback()
-            return {"error": str(e)}, 422
+            return {"error": str(e), "errors": [str(e)]}, 422
         session["user_id"] = user.id
         return user.to_dict(), 201
+
 
 class Login(Resource):
     def post(self):
@@ -40,7 +42,8 @@ class Login(Resource):
         if user and user.authenticate(data.get("password", "")):
             session["user_id"] = user.id
             return user.to_dict(), 200
-        return {"error": "Invalid username or password."}, 401
+        return {"error": "Invalid username or password.",
+                "errors": ["Invalid username or password."]}, 401
 
 
 class Logout(Resource):
